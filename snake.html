@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  	<title>Snake Game</title>
+    <link href="https://fonts.googleapis.com/css?family=Antic+Slab" rel="stylesheet">
+
+  </head>
+
+  <body>
+
+    <div id="score">0</div>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+    <style>
+      #gameCanvas {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+      #score {
+        text-align: center;
+        font-size: 140px;
+        font-family: 'Antic Slab', serif;
+      }
+    </style>
+    <script src="./snake.js"></script>
+  </body>
+
+
+</html>
