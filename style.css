@@ -1,0 +1,60 @@
+/* style.css */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+  }
+  
+  .navbar {
+    overflow: hidden;
+  }
+  
+  .navbar ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: space-between; /* This splits the items into two sides */
+    align-items: center; /* Centers the items vertically */
+  }
+  
+  .navbar ul li {
+    padding: 14px 20px;
+  }
+  
+  .navbar ul li:first-child {
+    margin-right: auto; /* This pushes the rest of the items to the right */
+  }
+  
+  .navbar ul li a {
+    color: white;
+    text-decoration: none;
+  }
+  
+  .navbar ul li a:hover {
+    color: yellow;
+  }
+  
+  .start {
+    height: 10em;
+    position: relative;
+    margin: 0;
+    position: absolute;
+    top: 30%;
+    left: 50%; 
+    margin-right: -50%;
+    transform: translate(-50%, -50%);
+    
+}
+  
+  h1 {
+    font-size: 2.5em;
+    text-align: center;
+  }
+  h2 {
+    text-align: center;
+  }
+
+  body {
+    background-color: teal;
+  }
+  
