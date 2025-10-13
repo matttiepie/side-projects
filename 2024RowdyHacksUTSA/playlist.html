@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Siren | Music Recommendations</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+        <header class="top-banner">
+
+                <h1><img class="bannerimage" src="{{ url_for('static', filename='siren_logo_simple.png') }}">Siren</h1>
+        </header>
+        <nav class="navbar">
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="playlist.html">Manage Playlist</a></li>
+                <li><a href="login.html">Login</a></li>
+            </ul>
+
+        </nav>
+
+        <main class="manageplaylistpage">
+        <div class="boxes">
+            <div class="leftbox">
+            <h1 class="searchbartitle">
+                <p>Add Song</p>
+            </h1>
+                <form action="/search" method="get">
+                    <input type="text" name="song_name" placeholder="Search...">
+                    <button type="submit">Search</button>
+                </form>
+                <div class="leftcontentbox">
+                    <ul>
+                        {% for item in found %}
+                            <li>{{ item[1] }}<br/>{{ item[0] }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            <div class="rightbox">
+                <p class="rightboxtitle">Recommended Songs</p>
+                <div class="rightcontentbox"><p>placeholder text for rightcontent</p></div>
+            </div>
+        </div>
+        </main>
+
+        <footer>
+            <nav class="footernav">
+                <ul>
+                    <li><a href=" "></a></li>
+                    <li><a href=" "></a></li>
+                    <li><a href=" ">RowdyHacks IX</a></li>
+                </ul>
+                <p class="copyright">Copyright&copy; DegenerateCodeMonkeys</p>
+            </nav>
+        </footer>
+</body>
+</html>
