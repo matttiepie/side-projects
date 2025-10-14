@@ -1,0 +1,1 @@
+This project is a project that I helped create during my time at UTSA. During a rowdyhacks Hackathon in 2024. Using Flask to create a website that will recommend songs for users depending on what they enter in for categories/genres. Myself and another dev created the API for this website and managed deployment while the other devs focused on the UI.
