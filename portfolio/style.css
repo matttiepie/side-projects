@@ -1,23 +1,20 @@
-ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex; /* Use flexbox for alignment */
-  align-items: center; /* Vertically align items */
+body {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2%;
 }
 
-ul li {
-  margin: 0 10px;
+.box {
+  background-color: lightblue;;
 }
 
-ul .logoDiv {
-  margin-right: auto; /* Pushes the logo to the far left */
-}
-
-ul li a {
-  display: block;
-  color: black;
-  text-align: center;
-  padding: 14px 16px;
-  text-decoration: none;
+.grid-container {
+  display: grid;
+  grid-template-columns: 300px 300px 300px 300px;
+  grid-template-rows: 300px 300px;
+  gap: 1em;
+  grid-template-areas: "box-1 box-2 box-2 box-3" 
+                       "box-1 box-2 box-2 box-4";
 }
