@@ -23,13 +23,25 @@ services:
       db:
         condition: service_healthy
     environment:
-      # IMPORTANT: use the service name "db" as host, not localhost
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/demoapi
       SPRING_DATASOURCE_USERNAME: demo
       SPRING_DATASOURCE_PASSWORD: demo
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
     ports:
       - "8080:8080"
+
+  frontend:
+    build: ./frontend
+    container_name: demoapi-ui
+    ports:
+      - "5173:5173"
+    environment:
+      - VITE_API_URL=http://localhost:8080
+    depends_on:
+      - app
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules # Prevents local node_modules from overwriting container's
 
 volumes:
   demoapi_pgdata:
