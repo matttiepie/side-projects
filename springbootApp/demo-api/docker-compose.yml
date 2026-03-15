@@ -10,6 +10,26 @@ services:
       - "5432:5432"
     volumes:
       - demoapi_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U demo -d demoapi"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    container_name: demoapi-app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      # IMPORTANT: use the service name "db" as host, not localhost
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/demoapi
+      SPRING_DATASOURCE_USERNAME: demo
+      SPRING_DATASOURCE_PASSWORD: demo
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    ports:
+      - "8080:8080"
 
 volumes:
   demoapi_pgdata:
