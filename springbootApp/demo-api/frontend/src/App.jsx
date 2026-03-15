@@ -16,16 +16,32 @@ function App() {
   }, []);
 
   // 2. Post a new book
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    await fetch('http://localhost:8080/api/books', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: title }) // Match your Book model fields
-    });
-    setTitle('');
-    fetchBooks(); // Refresh the list
-  };
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        try {
+            const response = await fetch('http://localhost:8080/api/books', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title: title })
+            });
+
+            // Check if the server responded with a status outside the 200-299 range
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({})); // try to get error body
+                throw new Error(`Server Error: ${response.status} - ${errorData.message || 'Unknown error'}`);
+            }
+
+            console.log("Success: Book added!");
+            setTitle('');
+            fetchBooks(); // Refresh the list ONLY on success
+
+        } catch (error) {
+            // This catches network failures AND the errors we throw above
+            console.error("Failed to communicate with the API:", error.message);
+            alert("Could not save book. Check the console for details.");
+        }
+    };
 
   return (
       <div>
