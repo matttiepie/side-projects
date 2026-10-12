@@ -1,0 +1,61 @@
+# =============================================================================
+# docker compose up --build     -> build the image and start everything
+# docker compose down           -> stop and remove containers (data is kept)
+# docker compose down -v        -> ...and also delete the database volume
+#
+# Traffic flow:  browser -> lb (nginx, localhost:8080) -> web x3 -> db
+# =============================================================================
+services:
+
+  # --- Load balancer: the ONLY service published to your PC for the app ---
+  lb:
+    image: nginx:1.27-alpine
+    ports:
+      - "8080:80"              # HOST:CONTAINER  -> open http://localhost:8080
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro   # :ro = read-only
+    depends_on:
+      - web
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      args:
+        APP_VERSION: compose-local
+    # No "ports:" anymore -> replicas are only reachable through the load
+    # balancer. (Several containers can't all publish the same host port.)
+    expose:
+      - "8080"                 # documents the port for other containers
+    deploy:
+      replicas: 3              # run 3 copies of the app
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      # "db" is the service name below. Compose creates a private network
+      # where containers find each other by service name (built-in DNS).
+      ConnectionStrings__Default: "Host=db;Port=5432;Database=${POSTGRES_DB};Username=${POSTGRES_USER};Password=${POSTGRES_PASSWORD}"
+    depends_on:
+      db:
+        condition: service_healthy   # wait until Postgres passes its healthcheck
+    restart: unless-stopped
+
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data   # named volume: data survives container restarts
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    # No "ports:" on purpose -> the DB is only reachable from inside the
+    # compose network, not from your machine. Uncomment to connect a GUI tool:
+    # ports:
+    #   - "5432:5432"
+
+volumes:
+  pgdata:

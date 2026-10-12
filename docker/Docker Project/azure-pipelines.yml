@@ -1,0 +1,94 @@
+# =============================================================================
+# Azure DevOps CI/CD pipeline
+#   CI  : compile the app, build the Docker image
+#   CD  : push the image to Azure Container Registry (ACR), then deploy it
+#         to Azure App Service (Web App for Containers)
+#
+# One-time setup in Azure DevOps (Project Settings -> Service connections):
+#   1. "Docker Registry" connection to your ACR   -> name it in dockerRegistryServiceConnection
+#   2. "Azure Resource Manager" connection        -> name it in azureSubscription
+# Then fill in the variables below.
+# =============================================================================
+
+trigger:
+  branches:
+    include: [ main ]
+
+pr:
+  branches:
+    include: [ main ]      # PRs run CI only (the push/deploy steps are skipped)
+
+variables:
+  dockerRegistryServiceConnection: 'acr-connection'        # TODO: your service connection name
+  containerRegistry: 'yourregistry.azurecr.io'              # TODO: your ACR login server
+  imageRepository: 'taskboard'
+  tag: '$(Build.BuildId)'                                   # unique tag per pipeline run
+  azureSubscription: 'azure-connection'                     # TODO: ARM service connection name
+  webAppName: 'taskboard-web'                               # TODO: your App Service name
+  isMain: $[eq(variables['Build.SourceBranch'], 'refs/heads/main')]
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+
+# ---------------------------------------------------------------------------
+- stage: Build
+  displayName: 'Build & push image'
+  jobs:
+  - job: Build
+    steps:
+
+    - task: UseDotNet@2
+      displayName: 'Install .NET 10 SDK'
+      inputs:
+        packageType: sdk
+        version: '10.x'
+
+    - script: dotnet build src/TaskBoard/TaskBoard.csproj -c Release
+      displayName: 'dotnet build (fail fast on compile errors)'
+
+    # Build the image on every run (including PRs) to prove the Dockerfile works
+    - task: Docker@2
+      displayName: 'docker build'
+      inputs:
+        command: build
+        containerRegistry: $(dockerRegistryServiceConnection)
+        repository: $(imageRepository)
+        dockerfile: 'Dockerfile'
+        buildContext: '.'
+        arguments: '--build-arg APP_VERSION=$(tag)'
+        tags: |
+          $(tag)
+          latest
+
+    # Only push when the code is merged to main
+    - task: Docker@2
+      displayName: 'docker push to ACR'
+      condition: and(succeeded(), eq(variables.isMain, true))
+      inputs:
+        command: push
+        containerRegistry: $(dockerRegistryServiceConnection)
+        repository: $(imageRepository)
+        tags: |
+          $(tag)
+          latest
+
+# ---------------------------------------------------------------------------
+- stage: Deploy
+  displayName: 'Deploy to Azure App Service'
+  dependsOn: Build
+  condition: and(succeeded(), eq(variables.isMain, true))
+  jobs:
+  - deployment: Deploy
+    environment: 'production'          # add approvals/checks on this in Azure DevOps
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+          - task: AzureWebAppContainer@1
+            displayName: 'Deploy image to Web App'
+            inputs:
+              azureSubscription: $(azureSubscription)
+              appName: $(webAppName)
+              containers: '$(containerRegistry)/$(imageRepository):$(tag)'

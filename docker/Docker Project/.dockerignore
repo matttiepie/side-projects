@@ -1,0 +1,11 @@
+# Files Docker should NOT send to the build context (keeps builds fast & clean)
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/*.user
+.git/
+.env
+*.md
+docker-compose*.yml
+azure-pipelines.yml

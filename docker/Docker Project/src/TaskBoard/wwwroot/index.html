@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TaskBoard – Docker Demo</title>
+  <style>
+    :root { --bg:#f5f7fa; --card:#fff; --text:#1f2937; --muted:#6b7280; --accent:#2563eb; --border:#e5e7eb; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg:#0f172a; --card:#1e293b; --text:#e5e7eb; --muted:#94a3b8; --accent:#60a5fa; --border:#334155; }
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, sans-serif; background:var(--bg); color:var(--text); }
+    main { max-width: 640px; margin: 40px auto; padding: 0 16px; }
+    h1 { margin: 0 0 4px; }
+    .card { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px; margin-top:16px; }
+    .info { display:grid; grid-template-columns: max-content 1fr; gap:4px 12px; font-size:14px; }
+    .info dt { color:var(--muted); }
+    .info dd { margin:0; font-family: ui-monospace, monospace; }
+    form { display:flex; gap:8px; }
+    input { flex:1; padding:10px; border:1px solid var(--border); border-radius:6px; background:var(--bg); color:var(--text); }
+    button { padding:10px 14px; border:0; border-radius:6px; background:var(--accent); color:#fff; cursor:pointer; }
+    ul { list-style:none; padding:0; margin:12px 0 0; }
+    li { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); }
+    li.done span { text-decoration: line-through; color:var(--muted); }
+    li span { flex:1; }
+    li .del { background:transparent; color:var(--muted); padding:4px 8px; }
+    .muted { color:var(--muted); font-size:14px; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>TaskBoard</h1>
+  <p class="muted">An ASP.NET Core app running in a Docker container, talking to PostgreSQL in another container.</p>
+
+  <section class="card">
+    <strong>Served by container</strong>
+    <dl class="info" id="info"><dt>loading…</dt><dd></dd></dl>
+  </section>
+
+  <section class="card">
+    <form id="add">
+      <input id="title" placeholder="Add a task…" autocomplete="off" required>
+      <button>Add</button>
+    </form>
+    <ul id="list"></ul>
+  </section>
+</main>
+
+<script>
+  const api = (url, opts) => fetch(url, opts).then(r => r.status === 204 ? null : r.json());
+
+  async function loadInfo() {
+    const i = await api('/api/info');
+    document.getElementById('info').innerHTML = Object.entries(i)
+      .map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('');
+  }
+
+  async function loadTasks() {
+    const tasks = await api('/api/tasks');
+    const list = document.getElementById('list');
+    list.innerHTML = '';
+    if (!tasks.length) list.innerHTML = '<li class="muted">No tasks yet.</li>';
+    for (const t of tasks) {
+      const li = document.createElement('li');
+      if (t.done) li.className = 'done';
+      li.innerHTML = `<input type="checkbox" ${t.done ? 'checked' : ''}><span></span><button class="del" title="Delete">✕</button>`;
+      li.querySelector('span').textContent = t.title;
+      li.querySelector('input').onchange = async () => { await api(`/api/tasks/${t.id}/toggle`, { method: 'PUT' }); loadTasks(); };
+      li.querySelector('.del').onclick   = async () => { await api(`/api/tasks/${t.id}`, { method: 'DELETE' }); loadTasks(); };
+      list.appendChild(li);
+    }
+  }
+
+  document.getElementById('add').onsubmit = async (e) => {
+    e.preventDefault();
+    const input = document.getElementById('title');
+    await api('/api/tasks', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: input.value }) });
+    input.value = '';
+    loadTasks();
+  };
+
+  loadInfo();
+  loadTasks();
+</script>
+</body>
+</html>
